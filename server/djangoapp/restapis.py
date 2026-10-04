@@ -12,19 +12,43 @@ sentiment_analyzer_url = os.getenv(
     'sentiment_analyzer_url',
     default="http://localhost:5050/")
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.dirname(HERE)
+LOCAL_REVIEWS = os.path.join(HERE, "local_reviews.json")
+
+
+def _load_json_list(pattern, key):
+    files = glob.glob(os.path.join(BASE, "database", "data", pattern))
+    if not files:
+        return []
+    with open(files[0], encoding="utf-8") as f:
+        data = json.load(f)
+    return data[key] if isinstance(data, dict) else data
+
+
+def _posted_reviews():
+    if os.path.exists(LOCAL_REVIEWS):
+        with open(LOCAL_REVIEWS, encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
 
 def _local_fallback(endpoint):
     """Used only when the Node/Mongo backend is not running."""
-    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    parts = endpoint.rstrip("/").split("/")
     if endpoint.startswith("/fetchReviews/dealer/"):
-        dealer_id = int(endpoint.rstrip("/").split("/")[-1])
-        files = glob.glob(os.path.join(base, "database", "data", "*review*.json"))
-        if not files:
-            return []
-        with open(files[0], encoding="utf-8") as f:
-            data = json.load(f)
-        reviews = data["reviews"] if isinstance(data, dict) else data
+        dealer_id = int(parts[-1])
+        reviews = _load_json_list("*review*.json", "reviews") + _posted_reviews()
         return [r for r in reviews if r.get("dealership") == dealer_id]
+    if endpoint.startswith("/fetchDealers"):
+        dealers = _load_json_list("*dealer*.json", "dealerships")
+        if len(parts) > 2:
+            return [d for d in dealers if d.get("state") == parts[2]]
+        return dealers
+    if endpoint.startswith("/fetchDealer/"):
+        dealer_id = int(parts[-1])
+        dealers = _load_json_list("*dealer*.json", "dealerships")
+        return [d for d in dealers if d.get("id") == dealer_id]
     return []
 
 
@@ -55,37 +79,19 @@ def analyze_review_sentiments(text):
 def post_review(data_dict):
     request_url = backend_url + "/insert_review"
     try:
-        response = requests.post(request_url, json=data_dict)
+        response = requests.post(request_url, json=data_dict, timeout=3)
         return response.json()
     except Exception as err:
-        print("Network exception occurred: {}".format(err))
-
-
-_reviews_fallback = _local_fallback
-
-
-def _local_fallback(endpoint):
-    if endpoint.startswith("/fetchDealers"):
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        files = glob.glob(os.path.join(base, "database", "data", "*dealer*.json"))
-        if not files:
-            return []
-        with open(files[0], encoding="utf-8") as f:
-            data = json.load(f)
-        dealers = data["dealerships"] if isinstance(data, dict) else data
-        parts = endpoint.rstrip("/").split("/")
-        if len(parts) > 2:
-            return [d for d in dealers if d.get("state") == parts[2]]
-        return dealers
-    return _reviews_fallback(endpoint)
-
-
-_dealers_fallback = _local_fallback
-
-
-def _local_fallback(endpoint):
-    if endpoint.startswith("/fetchDealer/"):
-        dealer_id = int(endpoint.rstrip("/").split("/")[-1])
-        all_dealers = _dealers_fallback("/fetchDealers")
-        return [d for d in all_dealers if d.get("id") == dealer_id]
-    return _dealers_fallback(endpoint)
+        print("Backend not reachable, saving review locally: {}".format(err))
+        try:
+            data_dict["dealership"] = int(data_dict.get("dealership"))
+        except (TypeError, ValueError):
+            pass
+        reviews = _posted_reviews()
+        ids = [r.get("id", 0) for r in reviews]
+        ids += [r.get("id", 0) for r in _load_json_list("*review*.json", "reviews")]
+        data_dict["id"] = max(ids + [0]) + 1
+        reviews.append(data_dict)
+        with open(LOCAL_REVIEWS, "w", encoding="utf-8") as f:
+            json.dump(reviews, f)
+        return data_dict
