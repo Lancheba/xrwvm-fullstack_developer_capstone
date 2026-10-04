@@ -8,8 +8,7 @@
 # from django.contrib import messages
 # from datetime import datetime
 
-from django.http import json
-from .restapis import get_request, analyze_review_sentimentsResponse
+from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 import logging
@@ -93,6 +92,7 @@ def get_dealer_reviews(request, dealer_id):
 # Create a `add_review` view to submit a review
 # def add_review(request):
 # ...
+
 
 
 
