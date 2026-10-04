@@ -6,6 +6,7 @@ from . import views
 app_name = 'djangoapp'
 urlpatterns = [
     # path for registration
+    path(route='register', view=views.registration, name='register'),
 
     # path for logout
     path(route='logout', view=views.logout_request, name='logout'),
@@ -18,4 +19,5 @@ urlpatterns = [
     # path for add a review view
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
