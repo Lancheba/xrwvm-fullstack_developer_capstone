@@ -88,9 +88,10 @@ return(
           }
         </tr>
       ))}
-     </table>;
+     </table>
   </div>
 )
 }
 
 export default Dealers
+
