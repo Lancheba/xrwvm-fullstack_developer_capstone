@@ -59,3 +59,22 @@ def post_review(data_dict):
         return response.json()
     except Exception as err:
         print("Network exception occurred: {}".format(err))
+
+
+_reviews_fallback = _local_fallback
+
+
+def _local_fallback(endpoint):
+    if endpoint.startswith("/fetchDealers"):
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        files = glob.glob(os.path.join(base, "database", "data", "*dealer*.json"))
+        if not files:
+            return []
+        with open(files[0], encoding="utf-8") as f:
+            data = json.load(f)
+        dealers = data["dealerships"] if isinstance(data, dict) else data
+        parts = endpoint.rstrip("/").split("/")
+        if len(parts) > 2:
+            return [d for d in dealers if d.get("state") == parts[2]]
+        return dealers
+    return _reviews_fallback(endpoint)
