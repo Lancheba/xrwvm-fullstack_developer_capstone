@@ -8,11 +8,13 @@
 # from django.contrib import messages
 # from datetime import datetime
 
-from django.http import JsonResponse
+from django.http import json
+from .restapis import get_request, analyze_review_sentimentsResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 import logging
 import json
+from .restapis import get_request, analyze_review_sentiments
 from django.views.decorators.csrf import csrf_exempt
 # from .populate import initiate
 
@@ -73,8 +75,16 @@ def registration(request):
 # ...
 
 # Create a `get_dealer_reviews` view to render the reviews of a dealer
-# def get_dealer_reviews(request,dealer_id):
-# ...
+def get_dealer_reviews(request, dealer_id):
+    # if dealer id has been provided
+    if dealer_id:
+        endpoint = "/fetchReviews/dealer/" + str(dealer_id)
+        reviews = get_request(endpoint)
+        for review_detail in reviews:
+            response = analyze_review_sentiments(review_detail['review'])
+            review_detail['sentiment'] = response['sentiment']
+        return JsonResponse({"status": 200, "reviews": reviews})
+    return JsonResponse({"status": 400, "message": "Bad Request"})
 
 # Create a `get_dealer_details` view to render the dealer details
 # def get_dealer_details(request, dealer_id):
@@ -83,5 +93,6 @@ def registration(request):
 # Create a `add_review` view to submit a review
 # def add_review(request):
 # ...
+
 
 
