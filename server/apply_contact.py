@@ -1,0 +1,108 @@
+"""Add /about and /contact routes to djangoproj/urls.py and create Contact.html.
+
+Run from the capstone 'server' folder:
+    python apply_contact.py
+Safe to run more than once.
+"""
+import os
+
+URLS = os.path.join("djangoproj", "urls.py")
+CONTACT = os.path.join("frontend", "static", "Contact.html")
+
+ANCHOR = """    path('', TemplateView.as_view(template_name="Home.html")),"""
+NEW_ROUTES = ANCHOR + """
+    path('about', TemplateView.as_view(template_name="About.html")),
+    path('about/', TemplateView.as_view(template_name="About.html")),
+    path('contact', TemplateView.as_view(template_name="Contact.html")),
+    path('contact/', TemplateView.as_view(template_name="Contact.html")),"""
+
+with open(URLS, "r", encoding="utf-8") as f:
+    text = f.read()
+
+if "template_name=\"About.html\"" in text:
+    print("urls.py already has the about/contact routes - skipped")
+elif ANCHOR not in text:
+    print("Could not find the Home route line in urls.py - not changed")
+else:
+    text = text.replace(ANCHOR, NEW_ROUTES, 1)
+    with open(URLS, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+    print("Updated", URLS)
+
+HTML = """<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact Us - Best Cars Dealership</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/bootstrap.min.css">
+</head>
+<body>
+<div>
+  <nav class="navbar navbar-expand-lg navbar-light" style="background-color:darkturquoise; height: 1in;">
+    <div class="container-fluid">
+      <h2 style="padding-right: 5%;">Dealerships</h2>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" style="font-size: larger;" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" style="font-size: larger;" href="/about">About Us</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" style="font-size: larger;" aria-current="page" href="/contact">Contact Us</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="card" style="width: 80%; margin: auto; margin-top: 5%; margin-bottom: 5%;">
+    <div class="banner" name="contact-header" style="text-align: center; padding: 20px;">
+      <img src="/static/contactus.png" alt="Contact Best Cars Dealership" style="width: 100%; max-height: 260px; object-fit: contain;">
+      <h2 style="margin-top: 15px;">Contact Us</h2>
+      <p>Questions about a vehicle, a dealership or a review? Reach out to our team using any of the details below.</p>
+    </div>
+    <div style="display: flex; flex-direction: row; justify-content: space-around; margin: auto; width: 100%; padding-bottom: 20px;">
+      <div class="card" style="width: 30%;">
+        <div class="card-body">
+          <p class="title"><b>Customer Support</b></p>
+          <p>Phone: +1 (555) 010-2030</p>
+          <p>Email: support@bestcars.example</p>
+          <p>Hours: Mon - Sat, 9:00 AM - 6:00 PM</p>
+        </div>
+      </div>
+
+      <div class="card" style="width: 30%;">
+        <div class="card-body">
+          <p class="title"><b>Sales Enquiries</b></p>
+          <p>Phone: +1 (555) 010-4050</p>
+          <p>Email: sales@bestcars.example</p>
+          <p>Hours: Mon - Sun, 9:00 AM - 8:00 PM</p>
+        </div>
+      </div>
+
+      <div class="card" style="width: 30%;">
+        <div class="card-body">
+          <p class="title"><b>Head Office</b></p>
+          <p>Best Cars Dealership</p>
+          <p>100 Main Street, Wichita, KS 67202</p>
+          <p>Email: office@bestcars.example</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+"""
+
+with open(CONTACT, "w", encoding="utf-8", newline="\n") as f:
+    f.write(HTML)
+print("Wrote", CONTACT)
