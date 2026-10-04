@@ -78,3 +78,14 @@ def _local_fallback(endpoint):
             return [d for d in dealers if d.get("state") == parts[2]]
         return dealers
     return _reviews_fallback(endpoint)
+
+
+_dealers_fallback = _local_fallback
+
+
+def _local_fallback(endpoint):
+    if endpoint.startswith("/fetchDealer/"):
+        dealer_id = int(endpoint.rstrip("/").split("/")[-1])
+        all_dealers = _dealers_fallback("/fetchDealers")
+        return [d for d in all_dealers if d.get("id") == dealer_id]
+    return _dealers_fallback(endpoint)
